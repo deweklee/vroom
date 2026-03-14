@@ -3,7 +3,7 @@
 Track phase and task completion as we build. Check off items as you go.
 
 **Started:** Phase 1
-**Current phase:** 9
+**Current phase:** 10
 
 ---
 
@@ -85,12 +85,13 @@ Track phase and task completion as we build. Check off items as you go.
 
 ---
 
-## Phase 9 — Event System
+## Phase 9 — Event System ✅
 
-- [ ] Add NATS client to API
-- [ ] Publish: fuel.entry.created, maintenance.record.created, modification.created, vehicle.created/updated/deleted
-- [ ] Verify events in NATS (e.g. subscriber or logs)
-- [ ] Commit
+- [x] Add NATS client to API (`internal/events/publisher.go`)
+- [x] Publish: fuel.entry.created, maintenance.record.created, modification.created, vehicle.created/updated/deleted
+- [x] Falls back to noopPublisher if NATS is unavailable — API never fails due to NATS
+- [x] Verify events in NATS (confirmed via `nats sub ">"`)
+- [x] Commit
 
 ---
 
