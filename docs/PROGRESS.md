@@ -3,26 +3,26 @@
 Track phase and task completion as we build. Check off items as you go.
 
 **Started:** Phase 1  
-**Current phase:** 1
+**Current phase:** 3
 
 ---
 
-## Phase 1 — Create Project
+## Phase 1 — Create Project ✅
 
-- [ ] Initialize repo (`git init`)
+- [x] Initialize repo (`git init`)
 - [x] Create directory structure (`frontend`, `services/api`, `workers/analytics-worker`, `infrastructure`, `scripts`)
-- [ ] First commit: "initial project structure"
+- [x] First commit: "initial project structure"
 
 ---
 
-## Phase 2 — Database Setup
+## Phase 2 — Database Setup ✅
 
-- [ ] Add `docker-compose.yml` (postgres, nats)
-- [ ] Start services (`docker compose up -d`)
-- [ ] Add migration runner / versioned SQL in `infrastructure/migrations/`
-- [ ] Migrations for: users, vehicles, fuel_entries, maintenance_records, modifications, vehicle_stats
-- [ ] Config: `.env.example` or equivalent for DATABASE_URL, NATS_URL, JWT_SECRET
-- [ ] Verify DB and NATS are reachable
+- [x] Add `docker-compose.yml` (postgres, nats)
+- [x] Start services (`docker compose up -d`)
+- [x] Add migration runner / versioned SQL in `infrastructure/migrations/`
+- [x] Migrations for: users, vehicles, fuel_entries, maintenance_records, modifications, vehicle_stats
+- [x] Config: `.env.example` or equivalent for DATABASE_URL, NATS_URL, JWT_SECRET
+- [x] Verify DB and NATS are reachable
 - [ ] Commit
 
 ---

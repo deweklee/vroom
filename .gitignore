@@ -1,0 +1,26 @@
+# Environment
+.env
+.env.local
+*.local
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Build / runtime
+dist/
+*.exe
+*.test
+coverage.out
