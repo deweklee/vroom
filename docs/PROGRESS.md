@@ -29,10 +29,10 @@ Track phase and task completion as we build. Check off items as you go.
 
 ## Phase 3 — Build API Server
 
-- [ ] `go mod init` and install Gin + pgx
-- [ ] Create `cmd/server/main.go` with health endpoint
-- [ ] CORS enabled for frontend origin
-- [ ] Load config from environment
+- [x] `go mod init` and install Gin + pgx
+- [x] Create `cmd/server/main.go` with health endpoint
+- [x] CORS enabled for frontend origin
+- [x] Load config from environment
 - [ ] Run server and verify `/health`
 - [ ] Commit
 
