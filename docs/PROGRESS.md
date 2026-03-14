@@ -3,7 +3,7 @@
 Track phase and task completion as we build. Check off items as you go.
 
 **Started:** Phase 1
-**Current phase:** 12
+**Current phase:** 13
 
 ---
 
@@ -119,11 +119,12 @@ Track phase and task completion as we build. Check off items as you go.
 
 ---
 
-## Phase 12 — Dashboard
+## Phase 12 — Dashboard ✅
 
-- [ ] Charts: MPG trend, fuel spending, cost per mile, maintenance costs
-- [ ] Wire to API / vehicle_stats
-- [ ] Commit
+- [x] MPG per fill-up line chart on vehicle detail page
+- [x] Fuel cost per fill-up bar chart on vehicle detail page
+- [x] Charts computed from fuel entries (same logic as Python worker)
+- [x] Commit
 
 ---
 
