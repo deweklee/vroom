@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
 import { apiFetch } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 
@@ -16,17 +20,44 @@ interface Stats {
   total_mod_cost: number; cost_per_mile?: number; last_updated: string;
 }
 
+interface FuelEntry {
+  id: string; odometer: number; gallons: number;
+  price_per_gallon: number; total_cost: number;
+  fuel_date?: string; created_at: string;
+}
+
+interface ChartPoint {
+  date: string;
+  mpg?: number;
+  cost: number;
+}
+
+function buildChartData(entries: FuelEntry[]): ChartPoint[] {
+  const sorted = [...entries].sort((a, b) => a.odometer - b.odometer);
+  return sorted.slice(1).map((entry, i) => {
+    const prev = sorted[i];
+    const miles = entry.odometer - prev.odometer;
+    const mpg = miles > 0 && entry.gallons > 0 ? miles / entry.gallons : undefined;
+    const date = new Date(entry.fuel_date ?? entry.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return { date, mpg: mpg ? parseFloat(mpg.toFixed(1)) : undefined, cost: entry.total_cost };
+  });
+}
+
 export default function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!getToken()) { router.push("/login"); return; }
     apiFetch<Vehicle>(`/vehicles/${id}`).then(setVehicle).catch((e) => setError(e.message));
     apiFetch<Stats>(`/vehicles/${id}/stats`).then(setStats).catch(() => null);
+    apiFetch<FuelEntry[] | null>(`/vehicles/${id}/fuel`)
+      .then((data) => setChartData(buildChartData(data ?? [])))
+      .catch(() => null);
   }, [id, router]);
 
   async function deleteVehicle() {
@@ -43,6 +74,8 @@ export default function VehicleDetailPage() {
     { label: "Maintenance", href: `/vehicles/${id}/maintenance` },
     { label: "Mods", href: `/vehicles/${id}/mods` },
   ];
+
+  const tooltipStyle = { backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8 };
 
   return (
     <div className="min-h-screen bg-zinc-950 px-4 py-8 text-white">
@@ -79,6 +112,37 @@ export default function VehicleDetailPage() {
           </div>
         )}
         {!stats && <p className="mb-6 text-sm text-zinc-600">No stats yet — log a fuel entry to start tracking.</p>}
+
+        {/* Charts */}
+        {chartData.length >= 1 && (
+          <div className="mb-6 space-y-4">
+            <div className="rounded-xl bg-zinc-900 p-4">
+              <p className="mb-3 text-sm font-semibold text-zinc-400">MPG per Fill-up</p>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
+                  <XAxis dataKey="date" tick={{ fill: "#71717a", fontSize: 11 }} />
+                  <YAxis tick={{ fill: "#71717a", fontSize: 11 }} width={35} />
+                  <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#a1a1aa" }} />
+                  <Line type="monotone" dataKey="mpg" stroke="#3b82f6" strokeWidth={2} dot={{ fill: "#3b82f6" }} connectNulls />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="rounded-xl bg-zinc-900 p-4">
+              <p className="mb-3 text-sm font-semibold text-zinc-400">Fuel Cost per Fill-up</p>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
+                  <XAxis dataKey="date" tick={{ fill: "#71717a", fontSize: 11 }} />
+                  <YAxis tick={{ fill: "#71717a", fontSize: 11 }} width={35} tickFormatter={(v) => `$${v}`} />
+                  <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#a1a1aa" }} formatter={(v: number) => [`$${v.toFixed(2)}`, "Cost"]} />
+                  <Bar dataKey="cost" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
 
         {/* Sub-nav */}
         <div className="flex gap-3">
