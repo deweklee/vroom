@@ -11,7 +11,22 @@ interface MaintenanceRecord {
   cost?: number; odometer?: number; shop?: string; notes?: string;
 }
 
-const empty = { service_type: "", service_date: "", cost: "", odometer: "", shop: "", notes: "" };
+const PRESET_TYPES = [
+  "Oil Change",
+  "Tire Rotation",
+  "Brake Service",
+  "Air Filter",
+  "Cabin Filter",
+  "Coolant Flush",
+  "Transmission Service",
+  "Spark Plugs",
+  "Battery Replacement",
+  "Inspection",
+  "Wiper Blades",
+  "Custom…",
+];
+
+const empty = { service_type: "", custom_type: "", service_date: "", cost: "", odometer: "", shop: "", notes: "" };
 
 export default function MaintenancePage() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +37,9 @@ export default function MaintenancePage() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const isCustom = form.service_type === "Custom…";
+  const resolvedType = isCustom ? form.custom_type : form.service_type;
+
   function set(field: string, value: string) { setForm((f) => ({ ...f, [field]: value })); }
 
   useEffect(() => {
@@ -31,12 +49,13 @@ export default function MaintenancePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!resolvedType) { setError("Service type is required"); return; }
     setSaving(true); setError("");
     try {
       const rec = await apiFetch<MaintenanceRecord>(`/vehicles/${id}/maintenance`, {
         method: "POST",
         body: JSON.stringify({
-          service_type: form.service_type,
+          service_type: resolvedType,
           service_date: `${form.service_date}T00:00:00Z`,
           ...(form.cost && { cost: parseFloat(form.cost) }),
           ...(form.odometer && { odometer: parseInt(form.odometer) }),
@@ -71,10 +90,33 @@ export default function MaintenancePage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="mb-1 block text-xs text-zinc-400">Service Type *</label>
-                <input type="text" value={form.service_type} onChange={(e) => set("service_type", e.target.value)}
-                  required placeholder="Oil Change"
-                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-white placeholder-zinc-600 outline-none focus:ring-2 focus:ring-blue-500" />
+                <select
+                  value={form.service_type}
+                  onChange={(e) => set("service_type", e.target.value)}
+                  required
+                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="" disabled>Select a type…</option>
+                  {PRESET_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
               </div>
+
+              {isCustom && (
+                <div className="col-span-2">
+                  <label className="mb-1 block text-xs text-zinc-400">Custom Service Type *</label>
+                  <input
+                    type="text"
+                    value={form.custom_type}
+                    onChange={(e) => set("custom_type", e.target.value)}
+                    required
+                    placeholder="e.g. Differential Fluid"
+                    className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-white placeholder-zinc-600 outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="mb-1 block text-xs text-zinc-400">Date *</label>
                 <input type="date" value={form.service_date} onChange={(e) => set("service_date", e.target.value)}
