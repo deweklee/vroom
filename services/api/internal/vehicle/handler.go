@@ -15,8 +15,9 @@ func NewHandler(s Service) *Handler {
 	return &Handler{svc: s}
 }
 
-func (h *Handler) RegisterRoutes(r *gin.Engine) {
+func (h *Handler) RegisterRoutes(r *gin.Engine, authMiddleware gin.HandlerFunc) {
 	v := r.Group("/vehicles")
+	v.Use(authMiddleware)
 	{
 		v.POST("", h.createVehicle)
 		v.GET("", h.listVehicles)

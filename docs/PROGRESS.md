@@ -3,7 +3,7 @@
 Track phase and task completion as we build. Check off items as you go.
 
 **Started:** Phase 1  
-**Current phase:** 3
+**Current phase:** 5
 
 ---
 
@@ -38,22 +38,22 @@ Track phase and task completion as we build. Check off items as you go.
 
 ---
 
-## Phase 4 — Vehicle CRUD
+## Phase 4 — Vehicle CRUD ✅
 
-- [ ] `internal/vehicle`: model, repository, service, handler
-- [ ] Routes: POST/GET/PUT/DELETE vehicles
-- [ ] Test with curl or Postman
-- [ ] Commit
+- [x] `internal/vehicle`: model, repository, service, handler
+- [x] Routes: POST/GET/PUT/DELETE vehicles
+- [x] Test with curl or Postman
+- [x] Commit
 
 ---
 
-## Phase 5 — Authentication
+## Phase 5 — Authentication ✅
 
-- [ ] `internal/auth`: handler, service, middleware
-- [ ] Login endpoint, JWT issue/validate
-- [ ] Protect vehicle (and later) routes with auth middleware
-- [ ] Test login and protected endpoints
-- [ ] Commit
+- [x] `internal/auth`: handler, service, middleware
+- [x] Login endpoint, JWT issue/validate
+- [x] Protect vehicle (and later) routes with auth middleware
+- [x] Test login and protected endpoints
+- [x] Commit
 
 ---
 

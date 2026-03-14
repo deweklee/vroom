@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"vroom-api/internal/db"
+	"vroom-api/internal/auth"
 	"vroom-api/internal/vehicle"
 )
 
@@ -16,6 +17,10 @@ func main() {
 	// Initialize DB pool
 	pool := db.NewPoolFromEnv()
 	defer pool.Close()
+
+	authRepo := auth.NewRepository(pool)
+	authSvc := auth.NewService(authRepo)
+	authHandler := auth.NewHandler(authSvc)
 
 	vehicleRepo := vehicle.NewRepository(pool)
 	vehicleSvc := vehicle.NewService(vehicleRepo)
@@ -29,13 +34,16 @@ func main() {
 	// CORS for frontend (Next.js dev server)
 	r.Use(corsMiddleware())
 
+	// Auth routes
+	authHandler.RegisterRoutes(r)
+
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
 	// Vehicle routes
-	vehicleHandler.RegisterRoutes(r)
+	vehicleHandler.RegisterRoutes(r, auth.AuthMiddleware())
 
 	if err := r.Run(":" + port); err != nil {
 		os.Exit(1)
