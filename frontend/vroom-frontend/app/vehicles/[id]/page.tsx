@@ -136,7 +136,7 @@ export default function VehicleDetailPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
                   <XAxis dataKey="date" tick={{ fill: "#71717a", fontSize: 11 }} />
                   <YAxis tick={{ fill: "#71717a", fontSize: 11 }} width={35} tickFormatter={(v) => `$${v}`} />
-                  <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#a1a1aa" }} formatter={(v: number) => [`$${v.toFixed(2)}`, "Cost"]} />
+                  <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: "#a1a1aa" }} formatter={(v) => [`$${Number(v).toFixed(2)}`, "Cost"]} />
                   <Bar dataKey="cost" fill="#22c55e" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>

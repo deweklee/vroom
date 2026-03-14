@@ -20,7 +20,42 @@ services:
     ports:
       - "4222:4222"
       - "8222:8222"
-    # Healthcheck removed: minimal image often lacks wget/curl; NATS is fine if port 4222 is open
+
+  api:
+    build: ./services/api
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://vroom:vroom@postgres:5432/vroom
+      JWT_SECRET: ${JWT_SECRET:-changeme}
+      NATS_URL: nats://nats:4222
+      PORT: "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+
+  worker:
+    build: ./workers/analytics-worker
+    environment:
+      DATABASE_URL: postgres://vroom:vroom@postgres:5432/vroom
+      NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend/vroom-frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
