@@ -23,7 +23,7 @@ Track phase and task completion as we build. Check off items as you go.
 - [x] Migrations for: users, vehicles, fuel_entries, maintenance_records, modifications, vehicle_stats
 - [x] Config: `.env.example` or equivalent for DATABASE_URL, NATS_URL, JWT_SECRET
 - [x] Verify DB and NATS are reachable
-- [ ] Commit
+- [x] Commit
 
 ---
 
@@ -33,8 +33,8 @@ Track phase and task completion as we build. Check off items as you go.
 - [x] Create `cmd/server/main.go` with health endpoint
 - [x] CORS enabled for frontend origin
 - [x] Load config from environment
-- [ ] Run server and verify `/health`
-- [ ] Commit
+- [x] Run server and verify `/health`
+- [x] Commit
 
 ---
 

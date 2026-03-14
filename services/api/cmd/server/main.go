@@ -5,12 +5,21 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+
+	"vroom-api/internal/db"
+	"vroom-api/internal/vehicle"
 )
 
 func main() {
 	port := getEnv("PORT", "8080")
-	dbURL := getEnv("DATABASE_URL", "")
-	_ = dbURL // will be used when we add DB connection in later phases
+
+	// Initialize DB pool
+	pool := db.NewPoolFromEnv()
+	defer pool.Close()
+
+	vehicleRepo := vehicle.NewRepository(pool)
+	vehicleSvc := vehicle.NewService(vehicleRepo)
+	vehicleHandler := vehicle.NewHandler(vehicleSvc)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
@@ -24,6 +33,9 @@ func main() {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	// Vehicle routes
+	vehicleHandler.RegisterRoutes(r)
 
 	if err := r.Run(":" + port); err != nil {
 		os.Exit(1)
