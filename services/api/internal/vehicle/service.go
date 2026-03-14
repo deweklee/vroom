@@ -11,6 +11,7 @@ import (
 type Service interface {
 	Create(ctx context.Context, in CreateVehicleInput) (*Vehicle, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*Vehicle, error)
+	GetStats(ctx context.Context, id uuid.UUID) (*VehicleStats, error)
 	List(ctx context.Context, userID *uuid.UUID) ([]Vehicle, error)
 	Update(ctx context.Context, id uuid.UUID, in UpdateVehicleInput) (*Vehicle, error)
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -40,6 +41,10 @@ func (s *service) Create(ctx context.Context, in CreateVehicleInput) (*Vehicle, 
 
 func (s *service) GetByID(ctx context.Context, id uuid.UUID) (*Vehicle, error) {
 	return s.repo.GetByID(ctx, id)
+}
+
+func (s *service) GetStats(ctx context.Context, id uuid.UUID) (*VehicleStats, error) {
+	return s.repo.GetStats(ctx, id)
 }
 
 func (s *service) List(ctx context.Context, userID *uuid.UUID) ([]Vehicle, error) {

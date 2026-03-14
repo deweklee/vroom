@@ -30,6 +30,16 @@ type CreateVehicleInput struct {
 	CurrentMileage *int       `json:"current_mileage"`
 }
 
+type VehicleStats struct {
+	VehicleID            uuid.UUID `json:"vehicle_id"`
+	AvgMPG               *float64  `json:"avg_mpg"`
+	TotalFuelCost        float64   `json:"total_fuel_cost"`
+	TotalMaintenanceCost float64   `json:"total_maintenance_cost"`
+	TotalModCost         float64   `json:"total_mod_cost"`
+	CostPerMile          *float64  `json:"cost_per_mile"`
+	LastUpdated          time.Time `json:"last_updated"`
+}
+
 type UpdateVehicleInput struct {
 	Make           *string    `json:"make"`
 	Model          *string    `json:"model"`

@@ -12,6 +12,7 @@ import (
 type Repository interface {
 	Create(ctx context.Context, in CreateVehicleInput) (*Vehicle, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*Vehicle, error)
+	GetStats(ctx context.Context, id uuid.UUID) (*VehicleStats, error)
 	List(ctx context.Context, userID *uuid.UUID) ([]Vehicle, error)
 	Update(ctx context.Context, id uuid.UUID, in UpdateVehicleInput) (*Vehicle, error)
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -145,6 +146,28 @@ func (r *pgxRepository) Update(ctx context.Context, id uuid.UUID, in UpdateVehic
 func (r *pgxRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.pool.Exec(ctx, `DELETE FROM vehicles WHERE id = $1`, id)
 	return err
+}
+
+func (r *pgxRepository) GetStats(ctx context.Context, id uuid.UUID) (*VehicleStats, error) {
+	row := r.pool.QueryRow(ctx, `
+		SELECT vehicle_id, avg_mpg, total_fuel_cost, total_maintenance_cost, total_mod_cost, cost_per_mile, last_updated
+		FROM vehicle_stats
+		WHERE vehicle_id = $1
+	`, id)
+
+	var s VehicleStats
+	if err := row.Scan(
+		&s.VehicleID,
+		&s.AvgMPG,
+		&s.TotalFuelCost,
+		&s.TotalMaintenanceCost,
+		&s.TotalModCost,
+		&s.CostPerMile,
+		&s.LastUpdated,
+	); err != nil {
+		return nil, err
+	}
+	return &s, nil
 }
 
 func scanVehicle(row pgx.Row) (*Vehicle, error) {

@@ -22,6 +22,7 @@ func (h *Handler) RegisterRoutes(r *gin.Engine, authMiddleware gin.HandlerFunc) 
 		v.POST("", h.createVehicle)
 		v.GET("", h.listVehicles)
 		v.GET("/:id", h.getVehicle)
+		v.GET("/:id/stats", h.getVehicleStats)
 		v.PUT("/:id", h.updateVehicle)
 		v.DELETE("/:id", h.deleteVehicle)
 	}
@@ -58,6 +59,21 @@ func (h *Handler) listVehicles(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, vs)
+}
+
+func (h *Handler) getVehicleStats(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	stats, err := h.svc.GetStats(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "stats not found"})
+		return
+	}
+	c.JSON(http.StatusOK, stats)
 }
 
 func (h *Handler) getVehicle(c *gin.Context) {
