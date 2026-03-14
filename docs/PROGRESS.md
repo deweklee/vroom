@@ -3,7 +3,7 @@
 Track phase and task completion as we build. Check off items as you go.
 
 **Started:** Phase 1
-**Current phase:** 10
+**Current phase:** 11
 
 ---
 
@@ -95,14 +95,14 @@ Track phase and task completion as we build. Check off items as you go.
 
 ---
 
-## Phase 10 — Python Analytics Worker
+## Phase 10 — Python Analytics Worker ✅
 
-- [ ] `workers/analytics-worker`: venv, dependencies (nats-py, pandas, psycopg2-binary)
-- [ ] Consumers for fuel, maintenance, modification events
-- [ ] Update `vehicle_stats` (MPG, costs, etc.)
-- [ ] Idempotency and retries for failed messages
-- [ ] Run worker and verify stats update
-- [ ] Commit
+- [x] `workers/analytics-worker`: venv, dependencies (nats-py, asyncpg)
+- [x] Consumers for fuel, maintenance, modification events
+- [x] Update `vehicle_stats` (avg_mpg, total costs, cost_per_mile)
+- [x] Recalculates all stats from scratch on every event (idempotent)
+- [x] Run worker and verify stats update
+- [x] Commit
 
 ---
 
