@@ -3,7 +3,7 @@
 Track phase and task completion as we build. Check off items as you go.
 
 **Started:** Phase 1
-**Current phase:** 13
+**Current phase:** 14
 
 ---
 
@@ -128,11 +128,14 @@ Track phase and task completion as we build. Check off items as you go.
 
 ---
 
-## Phase 13 — Containerization
+## Phase 13 — Containerization ✅
 
-- [ ] Dockerfiles: frontend, api, analytics-worker
-- [ ] docker-compose runs full stack
-- [ ] Commit
+- [x] Dockerfiles: api (multi-stage Go), worker (Python slim), frontend (multi-stage Next.js standalone)
+- [x] .dockerignore for each service
+- [x] docker-compose runs full 5-service stack (postgres, nats, api, worker, frontend)
+- [x] Inter-service networking via service names (e.g. postgres:5432, nats:4222)
+- [x] Verified with `docker compose up --build`
+- [x] Commit
 
 ---
 
