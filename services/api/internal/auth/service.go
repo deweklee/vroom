@@ -2,16 +2,17 @@ package auth
 
 import (
 	"context"
-	"crypto/sha256"
-	"crypto/subtle"
-	"encoding/hex"
 	"errors"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var ErrInvalidCredentials = errors.New("invalid email or password")
+var ErrEmailTaken = errors.New("email already registered")
 
 type Service interface {
 	Login(ctx context.Context, email, password string) (*User, error)
+	Register(ctx context.Context, email, password string) (*User, error)
 }
 
 type service struct {
@@ -25,17 +26,25 @@ func NewService(r Repository) Service {
 func (s *service) Login(ctx context.Context, email, password string) (*User, error) {
 	u, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
-		// In real code we would distinguish not-found vs other errors;
-		// for now, treat any error as invalid credentials.
 		return nil, ErrInvalidCredentials
 	}
 
-	// Compare password hashes (simple SHA-256 for now; switch to bcrypt/argon2 later).
-	sum := sha256.Sum256([]byte(password))
-	providedHash := hex.EncodeToString(sum[:])
-
-	if subtle.ConstantTimeCompare([]byte(providedHash), []byte(u.PasswordHash)) != 1 {
+	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)); err != nil {
 		return nil, ErrInvalidCredentials
+	}
+
+	return u, nil
+}
+
+func (s *service) Register(ctx context.Context, email, password string) (*User, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := s.repo.Create(ctx, email, string(hash))
+	if err != nil {
+		return nil, ErrEmailTaken
 	}
 
 	return u, nil

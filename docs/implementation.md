@@ -120,65 +120,61 @@ Test using curl or Postman.
 
 # Phase 5 — Authentication
 
-Add `internal/auth` (e.g. `handler.go`, `service.go`, `middleware.go`).
+Add `internal/auth` (`handler.go`, `service.go`, `repository.go`, `middleware.go`, `jwt.go`, `model.go`).
 
-* Login endpoint; issue JWT on valid credentials.
-* JWT validation middleware; attach `user_id` to context.
+* `POST /auth/register` — create user, hash password with **bcrypt**, issue JWT.
+* `POST /auth/login` — verify credentials with bcrypt, issue JWT.
+* JWT validation middleware; attach `user_id` to Gin context.
 * Protect all subsequent API routes with auth middleware.
-
-All later phases (vehicles, fuel, maintenance, modifications) should use `user_id` from the token (e.g. scope vehicles by owner).
+* All later phases (vehicles, fuel, maintenance, modifications) **must** read `user_id` from the JWT context — never from the request body — to prevent cross-user data access.
 
 ---
 
-# Phase 6 — Add Fuel Tracking
+# Phase 6 — Add Fuel Tracking ✅
 
-Create module:
-
-```id="z4e0r9"
-internal/fuel
-```
+Module: `internal/fuel`
 
 Endpoints:
 
-```id="kqkr1j"
+```
 POST /vehicles/:id/fuel
-GET /vehicles/:id/fuel
+GET  /vehicles/:id/fuel
 ```
 
-* MVP: create and list. Optionally add `GET /vehicles/:id/fuel/:entryId`, `PUT`, `DELETE` for full CRUD in a later iteration.
+* Ownership enforced via SQL EXISTS subquery — only the vehicle's owner can create or list entries.
+* `fuel_date` is optional; falls back to `created_at` for display purposes.
 
 ---
 
-# Phase 7 — Add Maintenance Tracking
+# Phase 7 — Add Maintenance Tracking ✅
 
-Create module:
-
-```id="7ekbg6"
-internal/maintenance
-```
+Module: `internal/maintenance`
 
 Endpoints:
 
-```id="g8gsva"
+```
 POST /vehicles/:id/maintenance
-GET /vehicles/:id/maintenance
+GET  /vehicles/:id/maintenance
 ```
 
-* MVP: create and list. Optionally add single-record GET/PUT/DELETE for full CRUD later.
+* `service_date` is required (RFC3339 format). All other fields optional.
+* Ownership enforced same as fuel — EXISTS subquery on vehicle ownership.
 
 ---
 
-# Phase 8 — Add Modification Tracking
+# Phase 8 — Add Modification Tracking ✅
 
-Create module `internal/modifications`.
+Module: `internal/modifications`
 
 Endpoints:
 
-* `POST /vehicles/:id/mods`
-* `GET /vehicles/:id/mods`
-* Optionally: `GET /vehicles/:id/mods/:id`, `PUT`, `DELETE` for full CRUD.
+```
+POST /vehicles/:id/mods
+GET  /vehicles/:id/mods
+```
 
-Publish event `modification.created` on create; analytics worker will refresh `vehicle_stats` (e.g. total mod cost).
+* Ownership enforced same as fuel and maintenance.
+* Event publishing (`modification.created`) deferred to Phase 9 (NATS).
 
 ---
 

@@ -20,7 +20,7 @@ type Vehicle struct {
 }
 
 type CreateVehicleInput struct {
-	UserID         uuid.UUID  `json:"user_id" binding:"required"`
+	UserID         uuid.UUID  `json:"-"` // set from JWT, never from request body
 	Make           string     `json:"make" binding:"required"`
 	Model          string     `json:"model" binding:"required"`
 	Year           int        `json:"year" binding:"required"`

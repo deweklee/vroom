@@ -9,6 +9,7 @@ import (
 
 type Repository interface {
 	GetByEmail(ctx context.Context, email string) (*User, error)
+	Create(ctx context.Context, email, passwordHash string) (*User, error)
 }
 
 type pgxRepository struct {
@@ -17,6 +18,24 @@ type pgxRepository struct {
 
 func NewRepository(pool *pgxpool.Pool) Repository {
 	return &pgxRepository{pool: pool}
+}
+
+func (r *pgxRepository) Create(ctx context.Context, email, passwordHash string) (*User, error) {
+	row := r.pool.QueryRow(ctx, `
+		INSERT INTO users (email, password_hash)
+		VALUES ($1, $2)
+		RETURNING id, email, password_hash
+	`, email, passwordHash)
+
+	var (
+		id   uuid.UUID
+		e    string
+		ph   string
+	)
+	if err := row.Scan(&id, &e, &ph); err != nil {
+		return nil, err
+	}
+	return &User{ID: id, Email: e, PasswordHash: ph}, nil
 }
 
 func (r *pgxRepository) GetByEmail(ctx context.Context, email string) (*User, error) {

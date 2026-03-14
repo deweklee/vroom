@@ -2,8 +2,8 @@
 
 Track phase and task completion as we build. Check off items as you go.
 
-**Started:** Phase 1  
-**Current phase:** 5
+**Started:** Phase 1
+**Current phase:** 9
 
 ---
 
@@ -57,31 +57,31 @@ Track phase and task completion as we build. Check off items as you go.
 
 ---
 
-## Phase 6 — Fuel Tracking
+## Phase 6 — Fuel Tracking ✅
 
-- [ ] `internal/fuel`: model, repository, service, handler
-- [ ] POST/GET `/vehicles/:id/fuel`
-- [ ] Test
-- [ ] Commit
-
----
-
-## Phase 7 — Maintenance Tracking
-
-- [ ] `internal/maintenance`: model, repository, service, handler
-- [ ] POST/GET `/vehicles/:id/maintenance`
-- [ ] Test
-- [ ] Commit
+- [x] `internal/fuel`: model, repository, service, handler
+- [x] POST/GET `/vehicles/:id/fuel`
+- [x] Test
+- [x] Commit
 
 ---
 
-## Phase 8 — Modification Tracking
+## Phase 7 — Maintenance Tracking ✅
 
-- [ ] `internal/modifications`: model, repository, service, handler
-- [ ] POST/GET `/vehicles/:id/mods`
-- [ ] Publish `modification.created` on create
-- [ ] Test
-- [ ] Commit
+- [x] `internal/maintenance`: model, repository, service, handler
+- [x] POST/GET `/vehicles/:id/maintenance`
+- [x] Test
+- [x] Commit
+
+---
+
+## Phase 8 — Modification Tracking ✅
+
+- [x] `internal/modifications`: model, repository, service, handler
+- [x] POST/GET `/vehicles/:id/mods`
+- [ ] Publish `modification.created` on create — deferred to Phase 9
+- [x] Test
+- [x] Commit
 
 ---
 

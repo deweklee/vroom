@@ -6,8 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"vroom-api/internal/db"
 	"vroom-api/internal/auth"
+	"vroom-api/internal/db"
+	"vroom-api/internal/fuel"
+	"vroom-api/internal/maintenance"
+	"vroom-api/internal/modifications"
 	"vroom-api/internal/vehicle"
 )
 
@@ -25,6 +28,18 @@ func main() {
 	vehicleRepo := vehicle.NewRepository(pool)
 	vehicleSvc := vehicle.NewService(vehicleRepo)
 	vehicleHandler := vehicle.NewHandler(vehicleSvc)
+
+	fuelRepo := fuel.NewRepository(pool)
+	fuelSvc := fuel.NewService(fuelRepo)
+	fuelHandler := fuel.NewHandler(fuelSvc)
+
+	maintenanceRepo := maintenance.NewRepository(pool)
+	maintenanceSvc := maintenance.NewService(maintenanceRepo)
+	maintenanceHandler := maintenance.NewHandler(maintenanceSvc)
+
+	modsRepo := modifications.NewRepository(pool)
+	modsSvc := modifications.NewService(modsRepo)
+	modsHandler := modifications.NewHandler(modsSvc)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
@@ -44,6 +59,9 @@ func main() {
 
 	// Vehicle routes
 	vehicleHandler.RegisterRoutes(r, auth.AuthMiddleware())
+	fuelHandler.RegisterRoutes(r, auth.AuthMiddleware())
+	maintenanceHandler.RegisterRoutes(r, auth.AuthMiddleware())
+	modsHandler.RegisterRoutes(r, auth.AuthMiddleware())
 
 	if err := r.Run(":" + port); err != nil {
 		os.Exit(1)

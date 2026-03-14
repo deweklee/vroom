@@ -344,11 +344,16 @@ Authentication uses **JWT tokens**.
 
 Flow:
 
-1. User logs in
-2. API verifies credentials
-3. JWT issued
+1. User registers (`POST /auth/register`) or logs in (`POST /auth/login`)
+2. API verifies credentials (bcrypt password comparison)
+3. JWT issued (24h TTL, HS256)
 4. Frontend stores token
-5. API requests include Authorization header
+5. API requests include `Authorization: Bearer <token>` header
+6. Auth middleware validates token and injects `user_id` into request context
+
+Password hashing: **bcrypt** (`DefaultCost`).
+
+Vehicle ownership: `user_id` is always taken from the JWT claims — never from the request body. This prevents users from creating or listing resources belonging to other users.
 
 ---
 

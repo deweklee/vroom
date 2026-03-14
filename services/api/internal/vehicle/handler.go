@@ -34,6 +34,13 @@ func (h *Handler) createVehicle(c *gin.Context) {
 		return
 	}
 
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	in.UserID = userID.(uuid.UUID)
+
 	v, err := h.svc.Create(c.Request.Context(), in)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -43,18 +50,9 @@ func (h *Handler) createVehicle(c *gin.Context) {
 }
 
 func (h *Handler) listVehicles(c *gin.Context) {
-	userIDParam := c.Query("user_id")
-	var userID *uuid.UUID
-	if userIDParam != "" {
-		id, err := uuid.Parse(userIDParam)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
-			return
-		}
-		userID = &id
-	}
+	userID := c.MustGet("user_id").(uuid.UUID)
 
-	vs, err := h.svc.List(c.Request.Context(), userID)
+	vs, err := h.svc.List(c.Request.Context(), &userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
