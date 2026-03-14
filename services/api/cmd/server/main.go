@@ -8,6 +8,7 @@ import (
 
 	"vroom-api/internal/auth"
 	"vroom-api/internal/db"
+	"vroom-api/internal/events"
 	"vroom-api/internal/fuel"
 	"vroom-api/internal/maintenance"
 	"vroom-api/internal/modifications"
@@ -21,24 +22,28 @@ func main() {
 	pool := db.NewPoolFromEnv()
 	defer pool.Close()
 
+	// Initialize NATS publisher (falls back to noop if NATS is unavailable)
+	pub := events.NewPublisher()
+	defer pub.Close()
+
 	authRepo := auth.NewRepository(pool)
 	authSvc := auth.NewService(authRepo)
 	authHandler := auth.NewHandler(authSvc)
 
 	vehicleRepo := vehicle.NewRepository(pool)
-	vehicleSvc := vehicle.NewService(vehicleRepo)
+	vehicleSvc := vehicle.NewService(vehicleRepo, pub)
 	vehicleHandler := vehicle.NewHandler(vehicleSvc)
 
 	fuelRepo := fuel.NewRepository(pool)
-	fuelSvc := fuel.NewService(fuelRepo)
+	fuelSvc := fuel.NewService(fuelRepo, pub)
 	fuelHandler := fuel.NewHandler(fuelSvc)
 
 	maintenanceRepo := maintenance.NewRepository(pool)
-	maintenanceSvc := maintenance.NewService(maintenanceRepo)
+	maintenanceSvc := maintenance.NewService(maintenanceRepo, pub)
 	maintenanceHandler := maintenance.NewHandler(maintenanceSvc)
 
 	modsRepo := modifications.NewRepository(pool)
-	modsSvc := modifications.NewService(modsRepo)
+	modsSvc := modifications.NewService(modsRepo, pub)
 	modsHandler := modifications.NewHandler(modsSvc)
 
 	gin.SetMode(gin.ReleaseMode)
