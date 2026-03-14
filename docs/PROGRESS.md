@@ -3,7 +3,7 @@
 Track phase and task completion as we build. Check off items as you go.
 
 **Started:** Phase 1
-**Current phase:** 11
+**Current phase:** 12
 
 ---
 
@@ -106,13 +106,16 @@ Track phase and task completion as we build. Check off items as you go.
 
 ---
 
-## Phase 11 — Frontend
+## Phase 11 — Frontend ✅
 
-- [ ] `npx create-next-app` in `frontend/`
-- [ ] Pages: vehicles list, vehicle details, vehicles/new, fuel form, maintenance form, mods
-- [ ] API base URL and auth (e.g. token in headers)
-- [ ] Verify in browser
-- [ ] Commit
+- [x] Next.js app in `frontend/vroom-frontend/` (TypeScript, Tailwind, App Router)
+- [x] Pages: login, register, vehicles list, vehicle detail, fuel, maintenance, mods
+- [x] JWT stored in localStorage, injected via `lib/api.ts` fetch wrapper
+- [x] Vehicle stats displayed on detail page (avg MPG, costs, cost/mile)
+- [x] Fuel form: total cost calculated from gallons × price, date defaults to today
+- [x] Added `GET /vehicles/:id/stats` API endpoint
+- [x] Verify in browser
+- [x] Commit
 
 ---
 
