@@ -294,47 +294,55 @@ dashboard-panels
 
 # 8. Containers
 
-Docker containers:
+Docker containers (backend only):
 
 ```id="afg6hh"
-frontend
 api
 analytics-worker
 postgres
 nats
 ```
 
+Frontend is deployed via Vercel — not containerized.
+
 ---
 
 # 9. Local Development
 
-Local development environment runs via **Docker Compose**.
-
-Services:
+Backend runs via **Docker Compose**:
 
 ```id="9zpl2e"
 postgres
 nats
 api
 analytics-worker
-frontend
 ```
+
+Frontend runs via Next.js dev server:
+
+```
+cd frontend/vroom-frontend
+npm run dev
+```
+
+Set `NEXT_PUBLIC_API_URL=http://localhost:8080` in `frontend/vroom-frontend/.env.local` if needed (defaults to localhost:8080).
 
 ---
 
-# 10. Kubernetes Deployment
+# 10. Deployment
 
-Kubernetes resources:
+| Service | Platform |
+|---|---|
+| Frontend (Next.js) | Vercel (free) |
+| API + Worker + NATS | Oracle Cloud VM — Docker Compose (always free) |
+| PostgreSQL | Neon (always free) |
 
-```id="dy60q7"
-Deployment: api
-Deployment: frontend
-Deployment: analytics-worker
-StatefulSet: postgres
-Deployment: nats
-```
+**Environment variables required in production:**
+- API: `DATABASE_URL`, `JWT_SECRET`, `NATS_URL`, `FRONTEND_URL`, `PORT`
+- Worker: `DATABASE_URL`, `NATS_URL`
+- Vercel: `NEXT_PUBLIC_API_URL`
 
-Scheduled analytics tasks use **Kubernetes CronJobs**.
+Kubernetes manifests exist in `infrastructure/kubernetes/` for reference.
 
 ---
 

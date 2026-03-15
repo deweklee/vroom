@@ -81,14 +81,14 @@ func getEnv(key, defaultVal string) string {
 }
 
 func corsMiddleware() gin.HandlerFunc {
+	frontendURL := getEnv("FRONTEND_URL", "http://localhost:3000")
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
-		// Allow localhost for dev; in production you'd restrict to your frontend origin
-		allowed := origin == "" || origin == "http://localhost:3000" || origin == "http://127.0.0.1:3000"
+		allowed := origin == "" || origin == frontendURL || origin == "http://localhost:3000" || origin == "http://127.0.0.1:3000"
 		if allowed && origin != "" {
 			c.Header("Access-Control-Allow-Origin", origin)
 		} else {
-			c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
+			c.Header("Access-Control-Allow-Origin", frontendURL)
 		}
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization")

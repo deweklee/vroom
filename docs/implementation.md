@@ -260,34 +260,34 @@ Add charts for:
 Create Dockerfiles for:
 
 ```id="ibdbkw"
-frontend
 api
 analytics-worker
 ```
 
-Update docker-compose to run full stack.
+Update docker-compose to run backend stack (postgres, nats, api, worker).
+
+Frontend is deployed via Vercel — no Dockerfile needed for production.
 
 ---
 
-# Phase 14 — Kubernetes Deployment
+# Phase 14 — Deployment
 
-Create local cluster:
+**Frontend → Vercel**
+- Connect GitHub repo to Vercel
+- Set root directory to `frontend/vroom-frontend`
+- Set `NEXT_PUBLIC_API_URL` to the production API URL
 
-```id="brgs2n"
-kind create cluster
-```
+**Backend → Oracle Cloud VM (Always Free) or similar**
+- Provision a VM (ARM A1, 4 OCPUs, 24GB RAM — always free)
+- Install Docker + Docker Compose on the VM
+- Clone repo and run `docker-compose up -d`
+- Set env vars: `DATABASE_URL` (Neon), `JWT_SECRET`, `FRONTEND_URL` (Vercel URL)
 
-Create Kubernetes manifests in:
+**Database → Neon (Always Free)**
+- Managed PostgreSQL, no expiry
+- Run migrations via Neon SQL Editor
 
-```id="pwv2uv"
-infrastructure/kubernetes
-```
-
-Deploy:
-
-```id="n3ym7j"
-kubectl apply -f infrastructure/kubernetes
-```
+Kubernetes manifests exist in `infrastructure/kubernetes/` for reference and future use.
 
 ---
 

@@ -47,15 +47,6 @@ services:
       nats:
         condition: service_started
 
-  frontend:
-    build:
-      context: ./frontend/vroom-frontend
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:8080
-    ports:
-      - "3000:3000"
-    depends_on:
-      - api
 
 volumes:
   postgres_data:
