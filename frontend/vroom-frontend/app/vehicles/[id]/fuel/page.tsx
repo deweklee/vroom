@@ -56,20 +56,20 @@ export default function FuelPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-4 py-8 text-white">
+    <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-2xl">
-        <Link href={`/vehicles/${id}`} className="mb-4 inline-block text-sm text-zinc-500 hover:text-white">← Vehicle</Link>
+        <Link href={`/vehicles/${id}`} className="mb-4 inline-block text-sm text-gray-500 hover:text-gray-900">← Vehicle</Link>
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Fuel Log</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Fuel Log</h1>
           <button onClick={() => setShowForm((s) => !s)}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500">
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">
             {showForm ? "Cancel" : "+ Add Fill-up"}
           </button>
         </div>
 
         {showForm && (
-          <form onSubmit={handleSubmit} className="mb-6 space-y-3 rounded-xl bg-zinc-900 p-5">
-            {error && <p className="text-sm text-red-400">{error}</p>}
+          <form onSubmit={handleSubmit} className="mb-6 space-y-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            {error && <p className="text-sm text-red-500">{error}</p>}
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "Odometer (mi) *", field: "odometer", type: "number" },
@@ -77,15 +77,15 @@ export default function FuelPage() {
                 { label: "Price / Gal *", field: "price_per_gallon", type: "number" },
               ].map(({ label, field, type }) => (
                 <div key={field}>
-                  <label className="mb-1 block text-xs text-zinc-400">{label}</label>
+                  <label className="mb-1 block text-xs text-gray-600">{label}</label>
                   <input type={type} step="any" value={form[field as keyof typeof form]}
                     onChange={(e) => set(field, e.target.value)} required
-                    className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               ))}
               <div>
-                <label className="mb-1 block text-xs text-zinc-400">Total Cost</label>
-                <p className="rounded-lg bg-zinc-800 px-3 py-2 text-zinc-400">
+                <label className="mb-1 block text-xs text-gray-600">Total Cost</label>
+                <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-500">
                   {form.gallons && form.price_per_gallon
                     ? `$${(parseFloat(form.gallons) * parseFloat(form.price_per_gallon)).toFixed(2)}`
                     : "—"}
@@ -94,39 +94,39 @@ export default function FuelPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs text-zinc-400">Date</label>
+                <label className="mb-1 block text-xs text-gray-600">Date</label>
                 <input type="date" value={form.fuel_date} onChange={(e) => set("fuel_date", e.target.value)}
-                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-zinc-400">Location</label>
+                <label className="mb-1 block text-xs text-gray-600">Location</label>
                 <input type="text" value={form.location} onChange={(e) => set("location", e.target.value)}
                   placeholder="Optional"
-                  className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-white placeholder-zinc-600 outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
             </div>
             <button type="submit" disabled={saving}
-              className="w-full rounded-lg bg-blue-600 py-2 font-semibold hover:bg-blue-500 disabled:opacity-50">
+              className="w-full rounded-lg bg-blue-600 py-2 font-semibold text-white hover:bg-blue-500 disabled:opacity-50">
               {saving ? "Saving…" : "Save Fill-up"}
             </button>
           </form>
         )}
 
-        {error && !showForm && <p className="text-red-400">{error}</p>}
-        {entries.length === 0 && <p className="text-zinc-500">No fill-ups logged yet.</p>}
+        {error && !showForm && <p className="text-red-500">{error}</p>}
+        {entries.length === 0 && <p className="text-gray-400">No fill-ups logged yet.</p>}
 
         <div className="space-y-3">
           {entries.map((e) => (
-            <div key={e.id} className="rounded-xl bg-zinc-900 p-4">
+            <div key={e.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="font-semibold">{e.odometer.toLocaleString()} mi</p>
-                  <p className="text-sm text-zinc-400">{e.gallons} gal · ${e.price_per_gallon}/gal</p>
-                  {e.location && <p className="text-sm text-zinc-500">{e.location}</p>}
+                  <p className="font-semibold text-gray-900">{e.odometer.toLocaleString()} mi</p>
+                  <p className="text-sm text-gray-500">{e.gallons} gal · ${e.price_per_gallon}/gal</p>
+                  {e.location && <p className="text-sm text-gray-400">{e.location}</p>}
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-green-400">${e.total_cost.toFixed(2)}</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="font-semibold text-green-600">${e.total_cost.toFixed(2)}</p>
+                  <p className="text-xs text-gray-400">
                     {new Date(e.fuel_date ?? e.created_at).toLocaleDateString()}
                   </p>
                 </div>

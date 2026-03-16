@@ -35,33 +35,33 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-4 py-8 text-white">
+    <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-2xl">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">My Vehicles</h1>
+          <h1 className="text-2xl font-bold text-gray-900">My Vehicles</h1>
           <div className="flex gap-3">
-            <Link href="/vehicles/new" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500">
+            <Link href="/vehicles/new" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">
               + Add Vehicle
             </Link>
-            <button onClick={logout} className="rounded-lg bg-zinc-800 px-4 py-2 text-sm text-zinc-400 hover:text-white">
+            <button onClick={logout} className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-500 hover:text-gray-900">
               Log out
             </button>
           </div>
         </div>
 
-        {loading && <p className="text-zinc-500">Loading…</p>}
-        {error && <p className="text-red-400">{error}</p>}
+        {loading && <p className="text-gray-400">Loading…</p>}
+        {error && <p className="text-red-500">{error}</p>}
 
         {!loading && vehicles.length === 0 && (
-          <p className="text-zinc-500">No vehicles yet. Add one to get started.</p>
+          <p className="text-gray-400">No vehicles yet. Add one to get started.</p>
         )}
 
         <div className="space-y-3">
           {vehicles.map((v) => (
             <Link key={v.id} href={`/vehicles/${v.id}`}
-              className="block rounded-xl bg-zinc-900 p-4 hover:bg-zinc-800 transition-colors">
-              <p className="text-lg font-semibold">{v.year} {v.make} {v.model}</p>
-              <div className="mt-1 flex gap-4 text-sm text-zinc-500">
+              className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+              <p className="text-lg font-semibold text-gray-900">{v.year} {v.make} {v.model}</p>
+              <div className="mt-1 flex gap-4 text-sm text-gray-500">
                 {v.vin && <span>VIN: {v.vin}</span>}
                 {v.current_mileage && <span>{v.current_mileage.toLocaleString()} mi</span>}
               </div>

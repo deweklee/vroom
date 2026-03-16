@@ -43,12 +43,12 @@ export default function NewVehiclePage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-4 py-8 text-white">
+    <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-md">
-        <Link href="/vehicles" className="mb-6 inline-block text-sm text-zinc-500 hover:text-white">← Back</Link>
-        <h1 className="mb-6 text-2xl font-bold">Add Vehicle</h1>
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-zinc-900 p-6">
-          {error && <p className="rounded bg-red-900/40 px-3 py-2 text-sm text-red-400">{error}</p>}
+        <Link href="/vehicles" className="mb-6 inline-block text-sm text-gray-500 hover:text-gray-900">← Back</Link>
+        <h1 className="mb-6 text-2xl font-bold text-gray-900">Add Vehicle</h1>
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          {error && <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
           {[
             { label: "Make", field: "make", required: true, placeholder: "Toyota" },
@@ -59,22 +59,22 @@ export default function NewVehiclePage() {
             { label: "Current Mileage", field: "current_mileage", placeholder: "Optional", type: "number" },
           ].map(({ label, field, required, placeholder, type }) => (
             <div key={field}>
-              <label className="mb-1 block text-sm text-zinc-400">{label}{required && " *"}</label>
+              <label className="mb-1 block text-sm text-gray-600">{label}{required && " *"}</label>
               <input
                 type={type ?? "text"}
                 value={form[field as keyof typeof form]}
                 onChange={(e) => set(field, e.target.value)}
                 required={required}
                 placeholder={placeholder}
-                className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-white placeholder-zinc-600 outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           ))}
 
           <div>
-            <label className="mb-1 block text-sm text-zinc-400">Purchase Date</label>
+            <label className="mb-1 block text-sm text-gray-600">Purchase Date</label>
             <input type="date" value={form.purchase_date} onChange={(e) => set("purchase_date", e.target.value)}
-              className="w-full rounded-lg bg-zinc-800 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
 
           <button type="submit" disabled={loading}
