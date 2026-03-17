@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-import { getToken, clearToken } from "@/lib/auth";
+import { getToken } from "@/lib/auth";
 
 interface Vehicle {
   id: string;
@@ -29,11 +29,6 @@ export default function VehiclesPage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  function logout() {
-    clearToken();
-    router.push("/login");
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto max-w-2xl">
@@ -43,9 +38,6 @@ export default function VehiclesPage() {
             <Link href="/vehicles/new" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">
               + Add Vehicle
             </Link>
-            <button onClick={logout} className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-500 hover:text-gray-900">
-              Log out
-            </button>
           </div>
         </div>
 
