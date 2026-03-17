@@ -29,6 +29,7 @@ export default function FuelPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [entries, setEntries] = useState<FuelEntry[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(empty());
@@ -39,7 +40,10 @@ export default function FuelPage() {
 
   useEffect(() => {
     if (!getToken()) { router.push("/login"); return; }
-    apiFetch<FuelEntry[] | null>(`/vehicles/${id}/fuel`).then((d) => setEntries(d ?? [])).catch((e) => setError(e.message));
+    apiFetch<FuelEntry[] | null>(`/vehicles/${id}/fuel`)
+      .then((d) => setEntries(d ?? []))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, [id, router]);
 
   function openCreate() {
@@ -159,7 +163,8 @@ export default function FuelPage() {
         )}
 
         {error && !showForm && <p className="text-red-500">{error}</p>}
-        {entries.length === 0 && <p className="text-gray-400">No fill-ups logged yet.</p>}
+        {loading && <p className="text-gray-400">Loading…</p>}
+        {!loading && entries.length === 0 && <p className="text-gray-400">No fill-ups logged yet.</p>}
 
         <div className="space-y-3">
           {entries.map((e) => (

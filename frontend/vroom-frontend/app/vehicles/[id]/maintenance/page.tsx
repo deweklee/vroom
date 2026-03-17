@@ -45,6 +45,7 @@ export default function MaintenancePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(empty);
@@ -58,7 +59,10 @@ export default function MaintenancePage() {
 
   useEffect(() => {
     if (!getToken()) { router.push("/login"); return; }
-    apiFetch<MaintenanceRecord[] | null>(`/vehicles/${id}/maintenance`).then((d) => setRecords(d ?? [])).catch((e) => setError(e.message));
+    apiFetch<MaintenanceRecord[] | null>(`/vehicles/${id}/maintenance`)
+      .then((d) => setRecords(d ?? []))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, [id, router]);
 
   function openCreate() {
@@ -204,7 +208,8 @@ export default function MaintenancePage() {
         )}
 
         {error && !showForm && <p className="text-red-500">{error}</p>}
-        {records.length === 0 && <p className="text-gray-400">No maintenance records yet.</p>}
+        {loading && <p className="text-gray-400">Loading…</p>}
+        {!loading && records.length === 0 && <p className="text-gray-400">No maintenance records yet.</p>}
 
         <div className="space-y-3">
           {records.map((r) => (

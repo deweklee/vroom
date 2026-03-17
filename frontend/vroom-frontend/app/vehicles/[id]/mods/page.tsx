@@ -39,6 +39,7 @@ export default function ModsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [mods, setMods] = useState<Modification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(empty);
@@ -49,7 +50,10 @@ export default function ModsPage() {
 
   useEffect(() => {
     if (!getToken()) { router.push("/login"); return; }
-    apiFetch<Modification[] | null>(`/vehicles/${id}/mods`).then((d) => setMods(d ?? [])).catch((e) => setError(e.message));
+    apiFetch<Modification[] | null>(`/vehicles/${id}/mods`)
+      .then((d) => setMods(d ?? []))
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, [id, router]);
 
   function openCreate() {
@@ -166,7 +170,8 @@ export default function ModsPage() {
         )}
 
         {error && !showForm && <p className="text-red-500">{error}</p>}
-        {mods.length === 0 && <p className="text-gray-400">No modifications logged yet.</p>}
+        {loading && <p className="text-gray-400">Loading…</p>}
+        {!loading && mods.length === 0 && <p className="text-gray-400">No modifications logged yet.</p>}
 
         <div className="space-y-3">
           {mods.map((m) => (
