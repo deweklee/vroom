@@ -21,6 +21,8 @@ func (h *Handler) RegisterRoutes(r *gin.Engine, authMiddleware gin.HandlerFunc) 
 	{
 		v.POST("", h.create)
 		v.GET("", h.list)
+		v.PUT("/:recordID", h.update)
+		v.DELETE("/:recordID", h.delete)
 	}
 }
 
@@ -49,6 +51,61 @@ func (h *Handler) create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, rec)
+}
+
+func (h *Handler) update(c *gin.Context) {
+	vehicleID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid vehicle id"})
+		return
+	}
+	recordID, err := uuid.Parse(c.Param("recordID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid record id"})
+		return
+	}
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	var in CreateRecordInput
+	if err := c.ShouldBindJSON(&in); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	rec, err := h.svc.Update(c.Request.Context(), recordID, vehicleID, userID, in)
+	if err != nil {
+		if err == ErrNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "record not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, rec)
+}
+
+func (h *Handler) delete(c *gin.Context) {
+	vehicleID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid vehicle id"})
+		return
+	}
+	recordID, err := uuid.Parse(c.Param("recordID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid record id"})
+		return
+	}
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	if err := h.svc.Delete(c.Request.Context(), recordID, vehicleID, userID); err != nil {
+		if err == ErrNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "record not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusNoContent)
 }
 
 func (h *Handler) list(c *gin.Context) {

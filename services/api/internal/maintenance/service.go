@@ -11,6 +11,8 @@ import (
 type Service interface {
 	Create(ctx context.Context, vehicleID, userID uuid.UUID, in CreateRecordInput) (*Record, error)
 	List(ctx context.Context, vehicleID, userID uuid.UUID) ([]Record, error)
+	Update(ctx context.Context, recordID, vehicleID, userID uuid.UUID, in CreateRecordInput) (*Record, error)
+	Delete(ctx context.Context, recordID, vehicleID, userID uuid.UUID) error
 }
 
 type service struct {
@@ -38,4 +40,12 @@ func (s *service) Create(ctx context.Context, vehicleID, userID uuid.UUID, in Cr
 
 func (s *service) List(ctx context.Context, vehicleID, userID uuid.UUID) ([]Record, error) {
 	return s.repo.List(ctx, vehicleID, userID)
+}
+
+func (s *service) Update(ctx context.Context, recordID, vehicleID, userID uuid.UUID, in CreateRecordInput) (*Record, error) {
+	return s.repo.Update(ctx, recordID, vehicleID, userID, in)
+}
+
+func (s *service) Delete(ctx context.Context, recordID, vehicleID, userID uuid.UUID) error {
+	return s.repo.Delete(ctx, recordID, vehicleID, userID)
 }

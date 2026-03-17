@@ -21,6 +21,8 @@ func (h *Handler) RegisterRoutes(r *gin.Engine, authMiddleware gin.HandlerFunc) 
 	{
 		v.POST("", h.create)
 		v.GET("", h.list)
+		v.PUT("/:modID", h.update)
+		v.DELETE("/:modID", h.delete)
 	}
 }
 
@@ -49,6 +51,61 @@ func (h *Handler) create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, mod)
+}
+
+func (h *Handler) update(c *gin.Context) {
+	vehicleID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid vehicle id"})
+		return
+	}
+	modID, err := uuid.Parse(c.Param("modID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid mod id"})
+		return
+	}
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	var in CreateModificationInput
+	if err := c.ShouldBindJSON(&in); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	mod, err := h.svc.Update(c.Request.Context(), modID, vehicleID, userID, in)
+	if err != nil {
+		if err == ErrNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "modification not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, mod)
+}
+
+func (h *Handler) delete(c *gin.Context) {
+	vehicleID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid vehicle id"})
+		return
+	}
+	modID, err := uuid.Parse(c.Param("modID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid mod id"})
+		return
+	}
+	userID := c.MustGet("user_id").(uuid.UUID)
+
+	if err := h.svc.Delete(c.Request.Context(), modID, vehicleID, userID); err != nil {
+		if err == ErrNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "modification not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusNoContent)
 }
 
 func (h *Handler) list(c *gin.Context) {

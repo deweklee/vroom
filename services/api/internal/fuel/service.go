@@ -11,6 +11,8 @@ import (
 type Service interface {
 	Create(ctx context.Context, vehicleID, userID uuid.UUID, in CreateFuelEntryInput) (*FuelEntry, error)
 	List(ctx context.Context, vehicleID, userID uuid.UUID) ([]FuelEntry, error)
+	Update(ctx context.Context, entryID, vehicleID, userID uuid.UUID, in CreateFuelEntryInput) (*FuelEntry, error)
+	Delete(ctx context.Context, entryID, vehicleID, userID uuid.UUID) error
 }
 
 type service struct {
@@ -38,4 +40,12 @@ func (s *service) Create(ctx context.Context, vehicleID, userID uuid.UUID, in Cr
 
 func (s *service) List(ctx context.Context, vehicleID, userID uuid.UUID) ([]FuelEntry, error) {
 	return s.repo.List(ctx, vehicleID, userID)
+}
+
+func (s *service) Update(ctx context.Context, entryID, vehicleID, userID uuid.UUID, in CreateFuelEntryInput) (*FuelEntry, error) {
+	return s.repo.Update(ctx, entryID, vehicleID, userID, in)
+}
+
+func (s *service) Delete(ctx context.Context, entryID, vehicleID, userID uuid.UUID) error {
+	return s.repo.Delete(ctx, entryID, vehicleID, userID)
 }

@@ -10,11 +10,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var ErrVehicleNotFound = errors.New("vehicle not found or access denied")
+var (
+	ErrVehicleNotFound = errors.New("vehicle not found or access denied")
+	ErrNotFound        = errors.New("entry not found or access denied")
+)
 
 type Repository interface {
 	Create(ctx context.Context, vehicleID, userID uuid.UUID, in CreateFuelEntryInput) (*FuelEntry, error)
 	List(ctx context.Context, vehicleID, userID uuid.UUID) ([]FuelEntry, error)
+	Update(ctx context.Context, entryID, vehicleID, userID uuid.UUID, in CreateFuelEntryInput) (*FuelEntry, error)
+	Delete(ctx context.Context, entryID, vehicleID, userID uuid.UUID) error
 }
 
 type pgxRepository struct {
@@ -64,6 +69,37 @@ func (r *pgxRepository) List(ctx context.Context, vehicleID, userID uuid.UUID) (
 		out = append(out, *e)
 	}
 	return out, rows.Err()
+}
+
+func (r *pgxRepository) Update(ctx context.Context, entryID, vehicleID, userID uuid.UUID, in CreateFuelEntryInput) (*FuelEntry, error) {
+	row := r.pool.QueryRow(ctx, `
+		UPDATE fuel_entries
+		SET fuel_date=$3, odometer=$4, gallons=$5, price_per_gallon=$6, total_cost=$7, location=$8
+		WHERE id=$1 AND vehicle_id=$2
+		  AND EXISTS (SELECT 1 FROM vehicles WHERE id=$2 AND user_id=$9)
+		RETURNING id, vehicle_id, fuel_date, odometer, gallons, price_per_gallon, total_cost, location, created_at
+	`, entryID, vehicleID, in.FuelDate, in.Odometer, in.Gallons, in.PricePerGallon, in.TotalCost, in.Location, userID)
+
+	entry, err := scanFuelEntry(row)
+	if err != nil {
+		return nil, ErrNotFound
+	}
+	return entry, nil
+}
+
+func (r *pgxRepository) Delete(ctx context.Context, entryID, vehicleID, userID uuid.UUID) error {
+	cmd, err := r.pool.Exec(ctx, `
+		DELETE FROM fuel_entries
+		WHERE id=$1 AND vehicle_id=$2
+		  AND EXISTS (SELECT 1 FROM vehicles WHERE id=$2 AND user_id=$3)
+	`, entryID, vehicleID, userID)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func scanFuelEntry(row pgx.Row) (*FuelEntry, error) {

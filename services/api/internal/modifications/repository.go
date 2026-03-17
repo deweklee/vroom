@@ -10,11 +10,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var ErrVehicleNotFound = errors.New("vehicle not found or access denied")
+var (
+	ErrVehicleNotFound = errors.New("vehicle not found or access denied")
+	ErrNotFound        = errors.New("modification not found or access denied")
+)
 
 type Repository interface {
 	Create(ctx context.Context, vehicleID, userID uuid.UUID, in CreateModificationInput) (*Modification, error)
 	List(ctx context.Context, vehicleID, userID uuid.UUID) ([]Modification, error)
+	Update(ctx context.Context, modID, vehicleID, userID uuid.UUID, in CreateModificationInput) (*Modification, error)
+	Delete(ctx context.Context, modID, vehicleID, userID uuid.UUID) error
 }
 
 type pgxRepository struct {
@@ -62,6 +67,37 @@ func (r *pgxRepository) List(ctx context.Context, vehicleID, userID uuid.UUID) (
 		out = append(out, *mod)
 	}
 	return out, rows.Err()
+}
+
+func (r *pgxRepository) Update(ctx context.Context, modID, vehicleID, userID uuid.UUID, in CreateModificationInput) (*Modification, error) {
+	row := r.pool.QueryRow(ctx, `
+		UPDATE modifications
+		SET name=$3, category=$4, cost=$5, install_date=$6, notes=$7
+		WHERE id=$1 AND vehicle_id=$2
+		  AND EXISTS (SELECT 1 FROM vehicles WHERE id=$2 AND user_id=$8)
+		RETURNING id, vehicle_id, name, category, cost, install_date, notes, created_at
+	`, modID, vehicleID, in.Name, in.Category, in.Cost, in.InstallDate, in.Notes, userID)
+
+	mod, err := scanModification(row)
+	if err != nil {
+		return nil, ErrNotFound
+	}
+	return mod, nil
+}
+
+func (r *pgxRepository) Delete(ctx context.Context, modID, vehicleID, userID uuid.UUID) error {
+	cmd, err := r.pool.Exec(ctx, `
+		DELETE FROM modifications
+		WHERE id=$1 AND vehicle_id=$2
+		  AND EXISTS (SELECT 1 FROM vehicles WHERE id=$2 AND user_id=$3)
+	`, modID, vehicleID, userID)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func scanModification(row pgx.Row) (*Modification, error) {

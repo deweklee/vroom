@@ -28,11 +28,25 @@ const PRESET_TYPES = [
 
 const empty = { service_type: "", custom_type: "", service_date: "", cost: "", odometer: "", shop: "", notes: "" };
 
+function toFormValues(r: MaintenanceRecord) {
+  const isPreset = PRESET_TYPES.includes(r.service_type) && r.service_type !== "Custom…";
+  return {
+    service_type: isPreset ? r.service_type : "Custom…",
+    custom_type: isPreset ? "" : r.service_type,
+    service_date: r.service_date.split("T")[0],
+    cost: r.cost != null ? String(r.cost) : "",
+    odometer: r.odometer != null ? String(r.odometer) : "",
+    shop: r.shop ?? "",
+    notes: r.notes ?? "",
+  };
+}
+
 export default function MaintenancePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(empty);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -47,28 +61,62 @@ export default function MaintenancePage() {
     apiFetch<MaintenanceRecord[] | null>(`/vehicles/${id}/maintenance`).then((d) => setRecords(d ?? [])).catch((e) => setError(e.message));
   }, [id, router]);
 
+  function openCreate() {
+    setEditingId(null);
+    setForm(empty);
+    setShowForm(true);
+    setError("");
+  }
+
+  function openEdit(r: MaintenanceRecord) {
+    setEditingId(r.id);
+    setForm(toFormValues(r));
+    setShowForm(true);
+    setError("");
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(empty);
+    setError("");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!resolvedType) { setError("Service type is required"); return; }
     setSaving(true); setError("");
+    const body = JSON.stringify({
+      service_type: resolvedType,
+      service_date: `${form.service_date}T00:00:00Z`,
+      ...(form.cost && { cost: parseFloat(form.cost) }),
+      ...(form.odometer && { odometer: parseInt(form.odometer) }),
+      ...(form.shop && { shop: form.shop }),
+      ...(form.notes && { notes: form.notes }),
+    });
     try {
-      const rec = await apiFetch<MaintenanceRecord>(`/vehicles/${id}/maintenance`, {
-        method: "POST",
-        body: JSON.stringify({
-          service_type: resolvedType,
-          service_date: `${form.service_date}T00:00:00Z`,
-          ...(form.cost && { cost: parseFloat(form.cost) }),
-          ...(form.odometer && { odometer: parseInt(form.odometer) }),
-          ...(form.shop && { shop: form.shop }),
-          ...(form.notes && { notes: form.notes }),
-        }),
-      });
-      setRecords((prev) => [rec, ...prev]);
-      setForm(empty); setShowForm(false);
+      if (editingId) {
+        const updated = await apiFetch<MaintenanceRecord>(`/vehicles/${id}/maintenance/${editingId}`, { method: "PUT", body });
+        setRecords((prev) => prev.map((rec) => rec.id === editingId ? updated : rec));
+      } else {
+        const rec = await apiFetch<MaintenanceRecord>(`/vehicles/${id}/maintenance`, { method: "POST", body });
+        setRecords((prev) => [rec, ...prev]);
+      }
+      closeForm();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete(recordId: string) {
+    if (!window.confirm("Delete this record?")) return;
+    try {
+      await apiFetch(`/vehicles/${id}/maintenance/${recordId}`, { method: "DELETE" });
+      setRecords((prev) => prev.filter((r) => r.id !== recordId));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete");
     }
   }
 
@@ -78,7 +126,7 @@ export default function MaintenancePage() {
         <Link href={`/vehicles/${id}`} className="mb-4 inline-block text-sm text-gray-500 hover:text-gray-900">← Vehicle</Link>
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Maintenance</h1>
-          <button onClick={() => setShowForm((s) => !s)}
+          <button onClick={showForm ? closeForm : openCreate}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">
             {showForm ? "Cancel" : "+ Add Record"}
           </button>
@@ -86,6 +134,7 @@ export default function MaintenancePage() {
 
         {showForm && (
           <form onSubmit={handleSubmit} className="mb-6 space-y-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-gray-700">{editingId ? "Edit Record" : "New Record"}</p>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
@@ -149,7 +198,7 @@ export default function MaintenancePage() {
             </div>
             <button type="submit" disabled={saving}
               className="w-full rounded-lg bg-blue-600 py-2 font-semibold text-white hover:bg-blue-500 disabled:opacity-50">
-              {saving ? "Saving…" : "Save Record"}
+              {saving ? "Saving…" : editingId ? "Save Changes" : "Save Record"}
             </button>
           </form>
         )}
@@ -169,9 +218,15 @@ export default function MaintenancePage() {
                     {r.notes && <span className="text-gray-400">{r.notes}</span>}
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="flex flex-col items-end gap-1">
                   {r.cost != null && <p className="font-semibold text-green-600">${r.cost.toFixed(2)}</p>}
                   <p className="text-xs text-gray-400">{new Date(r.service_date).toLocaleDateString()}</p>
+                  <div className="flex gap-2 mt-1">
+                    <button onClick={() => openEdit(r)}
+                      className="text-xs text-blue-500 hover:text-blue-700">Edit</button>
+                    <button onClick={() => handleDelete(r.id)}
+                      className="text-xs text-red-400 hover:text-red-600">Delete</button>
+                  </div>
                 </div>
               </div>
             </div>

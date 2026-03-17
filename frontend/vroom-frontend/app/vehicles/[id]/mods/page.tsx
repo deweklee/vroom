@@ -25,11 +25,22 @@ const CATEGORIES = [
 
 const empty = { name: "", category: "", cost: "", install_date: "", notes: "" };
 
+function toFormValues(m: Modification) {
+  return {
+    name: m.name,
+    category: m.category ?? "",
+    cost: m.cost != null ? String(m.cost) : "",
+    install_date: m.install_date ? m.install_date.split("T")[0] : "",
+    notes: m.notes ?? "",
+  };
+}
+
 export default function ModsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [mods, setMods] = useState<Modification[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(empty);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -41,26 +52,60 @@ export default function ModsPage() {
     apiFetch<Modification[] | null>(`/vehicles/${id}/mods`).then((d) => setMods(d ?? [])).catch((e) => setError(e.message));
   }, [id, router]);
 
+  function openCreate() {
+    setEditingId(null);
+    setForm(empty);
+    setShowForm(true);
+    setError("");
+  }
+
+  function openEdit(m: Modification) {
+    setEditingId(m.id);
+    setForm(toFormValues(m));
+    setShowForm(true);
+    setError("");
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(empty);
+    setError("");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true); setError("");
+    const body = JSON.stringify({
+      name: form.name,
+      ...(form.category && { category: form.category }),
+      ...(form.cost && { cost: parseFloat(form.cost) }),
+      ...(form.install_date && { install_date: `${form.install_date}T00:00:00Z` }),
+      ...(form.notes && { notes: form.notes }),
+    });
     try {
-      const mod = await apiFetch<Modification>(`/vehicles/${id}/mods`, {
-        method: "POST",
-        body: JSON.stringify({
-          name: form.name,
-          ...(form.category && { category: form.category }),
-          ...(form.cost && { cost: parseFloat(form.cost) }),
-          ...(form.install_date && { install_date: `${form.install_date}T00:00:00Z` }),
-          ...(form.notes && { notes: form.notes }),
-        }),
-      });
-      setMods((prev) => [mod, ...prev]);
-      setForm(empty); setShowForm(false);
+      if (editingId) {
+        const updated = await apiFetch<Modification>(`/vehicles/${id}/mods/${editingId}`, { method: "PUT", body });
+        setMods((prev) => prev.map((m) => m.id === editingId ? updated : m));
+      } else {
+        const mod = await apiFetch<Modification>(`/vehicles/${id}/mods`, { method: "POST", body });
+        setMods((prev) => [mod, ...prev]);
+      }
+      closeForm();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete(modId: string) {
+    if (!window.confirm("Delete this modification?")) return;
+    try {
+      await apiFetch(`/vehicles/${id}/mods/${modId}`, { method: "DELETE" });
+      setMods((prev) => prev.filter((m) => m.id !== modId));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete");
     }
   }
 
@@ -70,7 +115,7 @@ export default function ModsPage() {
         <Link href={`/vehicles/${id}`} className="mb-4 inline-block text-sm text-gray-500 hover:text-gray-900">← Vehicle</Link>
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Modifications</h1>
-          <button onClick={() => setShowForm((s) => !s)}
+          <button onClick={showForm ? closeForm : openCreate}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500">
             {showForm ? "Cancel" : "+ Add Mod"}
           </button>
@@ -78,6 +123,7 @@ export default function ModsPage() {
 
         {showForm && (
           <form onSubmit={handleSubmit} className="mb-6 space-y-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-gray-700">{editingId ? "Edit Modification" : "New Modification"}</p>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <div className="grid grid-cols-2 gap-3">
               <div className="col-span-2">
@@ -114,7 +160,7 @@ export default function ModsPage() {
             </div>
             <button type="submit" disabled={saving}
               className="w-full rounded-lg bg-blue-600 py-2 font-semibold text-white hover:bg-blue-500 disabled:opacity-50">
-              {saving ? "Saving…" : "Save Mod"}
+              {saving ? "Saving…" : editingId ? "Save Changes" : "Save Mod"}
             </button>
           </form>
         )}
@@ -133,9 +179,15 @@ export default function ModsPage() {
                     {m.notes && <span className="text-gray-400">{m.notes}</span>}
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="flex flex-col items-end gap-1">
                   {m.cost != null && <p className="font-semibold text-green-600">${m.cost.toFixed(2)}</p>}
                   {m.install_date && <p className="text-xs text-gray-400">{new Date(m.install_date).toLocaleDateString()}</p>}
+                  <div className="flex gap-2 mt-1">
+                    <button onClick={() => openEdit(m)}
+                      className="text-xs text-blue-500 hover:text-blue-700">Edit</button>
+                    <button onClick={() => handleDelete(m.id)}
+                      className="text-xs text-red-400 hover:text-red-600">Delete</button>
+                  </div>
                 </div>
               </div>
             </div>
