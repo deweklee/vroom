@@ -44,7 +44,7 @@ export default function Home() {
           Own your drive.
         </h1>
         <p className="mt-4 max-w-xl text-lg text-gray-500">
-          Vroom is your personal vehicle logbook — track fuel, maintenance, and
+          Vroom is your personal vehicle logbook. Track fuel, maintenance, and
           mods for every car in your garage.
         </p>
         <div className="mt-8">
