@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { apiFetch } from "@/lib/api";
 import { getToken } from "@/lib/auth";
+import VehicleStats from "@/components/VehicleStats";
 
 interface Vehicle {
   id: string; make: string; model: string; year: number;
@@ -43,22 +44,79 @@ function buildChartData(entries: FuelEntry[]): ChartPoint[] {
   });
 }
 
+function toEditForm(v: Vehicle) {
+  return {
+    make: v.make,
+    model: v.model,
+    year: String(v.year),
+    vin: v.vin ?? "",
+    purchase_price: v.purchase_price != null ? String(v.purchase_price) : "",
+    purchase_date: v.purchase_date ? v.purchase_date.split("T")[0] : "",
+    current_mileage: v.current_mileage != null ? String(v.current_mileage) : "",
+  };
+}
+
 export default function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [error, setError] = useState("");
+  const [showEdit, setShowEdit] = useState(false);
+  const [editForm, setEditForm] = useState<ReturnType<typeof toEditForm> | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
 
   useEffect(() => {
     if (!getToken()) { router.push("/login"); return; }
     apiFetch<Vehicle>(`/vehicles/${id}`).then(setVehicle).catch((e) => setError(e.message));
-    apiFetch<Stats>(`/vehicles/${id}/stats`).then(setStats).catch(() => null);
+    apiFetch<Stats>(`/vehicles/${id}/stats`)
+      .then(setStats)
+      .catch(() => null)
+      .finally(() => setStatsLoading(false));
     apiFetch<FuelEntry[] | null>(`/vehicles/${id}/fuel`)
       .then((data) => setChartData(buildChartData(data ?? [])))
       .catch(() => null);
   }, [id, router]);
+
+  function openEdit() {
+    if (!vehicle) return;
+    setEditForm(toEditForm(vehicle));
+    setShowEdit(true);
+    setEditError("");
+  }
+
+  function setField(field: string, value: string) {
+    setEditForm((f) => f ? { ...f, [field]: value } : f);
+  }
+
+  async function handleUpdate(e: React.SyntheticEvent) {
+    e.preventDefault();
+    if (!editForm) return;
+    setSaving(true); setEditError("");
+    try {
+      const updated = await apiFetch<Vehicle>(`/vehicles/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          make: editForm.make,
+          model: editForm.model,
+          year: parseInt(editForm.year),
+          ...(editForm.vin && { vin: editForm.vin }),
+          ...(editForm.purchase_price && { purchase_price: parseFloat(editForm.purchase_price) }),
+          ...(editForm.purchase_date && { purchase_date: `${editForm.purchase_date}T00:00:00Z` }),
+          ...(editForm.current_mileage && { current_mileage: parseInt(editForm.current_mileage) }),
+        }),
+      });
+      setVehicle(updated);
+      setShowEdit(false);
+    } catch (err: unknown) {
+      setEditError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function deleteVehicle() {
     if (!confirm("Delete this vehicle? This cannot be undone.")) return;
@@ -91,27 +149,69 @@ export default function VehicleDetailPage() {
               {vehicle.purchase_price && <span>Purchased for ${vehicle.purchase_price.toLocaleString()}</span>}
             </div>
           </div>
-          <button onClick={deleteVehicle} className="text-sm text-red-500 hover:text-red-400">Delete</button>
+          <div className="flex gap-3">
+            <button onClick={openEdit} className="text-sm text-blue-500 hover:text-blue-700">Edit</button>
+            <button onClick={deleteVehicle} className="text-sm text-red-500 hover:text-red-400">Delete</button>
+          </div>
         </div>
 
-        {/* Stats */}
-        {stats && (
-          <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {[
-              { label: "Avg MPG", value: stats.avg_mpg != null ? stats.avg_mpg.toFixed(1) : "—" },
-              { label: "Fuel Cost", value: `$${stats.total_fuel_cost.toFixed(2)}` },
-              { label: "Maintenance", value: `$${stats.total_maintenance_cost.toFixed(2)}` },
-              { label: "Mods", value: `$${stats.total_mod_cost.toFixed(2)}` },
-              { label: "Cost / Mile", value: stats.cost_per_mile != null ? `$${stats.cost_per_mile.toFixed(3)}` : "—" },
-            ].map(({ label, value }) => (
-              <div key={label} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                <p className="text-xs text-gray-500">{label}</p>
-                <p className="mt-1 text-xl font-semibold text-gray-900">{value}</p>
+        {/* Edit form */}
+        {showEdit && editForm && (
+          <form onSubmit={handleUpdate} className="mb-6 space-y-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-gray-700">Edit Vehicle</p>
+            {editError && <p className="text-sm text-red-500">{editError}</p>}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-xs text-gray-600">Make *</label>
+                <input type="text" value={editForm.make} onChange={(e) => setField("make", e.target.value)} required
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-            ))}
-          </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-600">Model *</label>
+                <input type="text" value={editForm.model} onChange={(e) => setField("model", e.target.value)} required
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-600">Year *</label>
+                <input type="number" value={editForm.year} onChange={(e) => setField("year", e.target.value)} required
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-600">VIN</label>
+                <input type="text" value={editForm.vin} onChange={(e) => setField("vin", e.target.value)} placeholder="Optional"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-600">Current Mileage</label>
+                <input type="number" value={editForm.current_mileage} onChange={(e) => setField("current_mileage", e.target.value)} placeholder="Optional"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-gray-600">Purchase Price</label>
+                <input type="number" step="any" value={editForm.purchase_price} onChange={(e) => setField("purchase_price", e.target.value)} placeholder="Optional"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div className="min-w-0 col-span-2 sm:col-span-1">
+                <label className="mb-1 block text-xs text-gray-600">Purchase Date</label>
+                <input type="date" value={editForm.purchase_date} onChange={(e) => setField("purchase_date", e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button type="submit" disabled={saving}
+                className="flex-1 rounded-lg bg-blue-600 py-2 font-semibold text-white hover:bg-blue-500 disabled:opacity-50">
+                {saving ? "Saving…" : "Save Changes"}
+              </button>
+              <button type="button" onClick={() => setShowEdit(false)}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-500 hover:text-gray-900">
+                Cancel
+              </button>
+            </div>
+          </form>
         )}
-        {!stats && <p className="mb-6 text-sm text-gray-400">No stats yet — log a fuel entry to start tracking.</p>}
+
+        {/* Stats */}
+        <VehicleStats stats={stats} loading={statsLoading} />
 
         {/* Charts */}
         {chartData.length >= 1 && (

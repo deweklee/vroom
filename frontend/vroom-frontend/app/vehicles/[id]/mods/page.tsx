@@ -150,12 +150,12 @@ export default function ModsPage() {
                   placeholder="Optional"
                   className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="mb-1 block text-xs text-gray-600">Install Date</label>
                 <input type="date" value={form.install_date} onChange={(e) => set("install_date", e.target.value)}
                   className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="mb-1 block text-xs text-gray-600">Notes</label>
                 <input type="text" value={form.notes} onChange={(e) => set("notes", e.target.value)}
                   placeholder="Optional"

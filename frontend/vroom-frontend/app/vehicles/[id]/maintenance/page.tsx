@@ -170,12 +170,12 @@ export default function MaintenancePage() {
                 </div>
               )}
 
-              <div>
+              <div className="min-w-0">
                 <label className="mb-1 block text-xs text-gray-600">Date *</label>
                 <input type="date" value={form.service_date} onChange={(e) => set("service_date", e.target.value)}
                   required className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="mb-1 block text-xs text-gray-600">Cost</label>
                 <input type="number" step="any" value={form.cost} onChange={(e) => set("cost", e.target.value)}
                   placeholder="Optional"
