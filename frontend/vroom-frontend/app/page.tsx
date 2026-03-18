@@ -32,7 +32,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
-      <section className="flex flex-col items-center justify-center px-6 pt-16 pb-6 text-center">
+      <section className="flex flex-col items-center px-6 pt-8 pb-6 text-center">
         <Image
           src="/vroom-logo-2.png"
           alt="Vroom"

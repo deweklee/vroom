@@ -32,8 +32,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen bg-gray-50 px-4 pt-12">
+      <div className="mx-auto w-full max-w-sm">
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900">Sign in</h2>
           {error && <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
