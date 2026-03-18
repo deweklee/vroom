@@ -16,6 +16,7 @@ type Vehicle struct {
 	PurchasePrice  *float64   `json:"purchase_price,omitempty"`
 	PurchaseDate   *time.Time `json:"purchase_date,omitempty"`
 	CurrentMileage *int       `json:"current_mileage,omitempty"`
+	LatestOdometer *int       `json:"latest_odometer,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
 }
 

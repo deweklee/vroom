@@ -63,6 +63,7 @@ export default function VehicleDetailPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
+  const [latestOdometer, setLatestOdometer] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [showEdit, setShowEdit] = useState(false);
   const [editForm, setEditForm] = useState<ReturnType<typeof toEditForm> | null>(null);
@@ -77,7 +78,13 @@ export default function VehicleDetailPage() {
       .catch(() => null)
       .finally(() => setStatsLoading(false));
     apiFetch<FuelEntry[] | null>(`/vehicles/${id}/fuel`)
-      .then((data) => setChartData(buildChartData(data ?? [])))
+      .then((data) => {
+        const entries = data ?? [];
+        setChartData(buildChartData(entries));
+        if (entries.length > 0) {
+          setLatestOdometer(Math.max(...entries.map((e) => e.odometer)));
+        }
+      })
       .catch(() => null);
   }, [id, router]);
 
@@ -145,9 +152,15 @@ export default function VehicleDetailPage() {
             <h1 className="text-2xl font-bold text-gray-900">{vehicle.year} {vehicle.make} {vehicle.model}</h1>
             <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
               {vehicle.vin && <span>VIN: {vehicle.vin}</span>}
-              {vehicle.current_mileage && <span>{vehicle.current_mileage.toLocaleString()} mi</span>}
+              {latestOdometer != null
+                ? <span>{latestOdometer.toLocaleString()} mi</span>
+                : vehicle.current_mileage != null && <span>{vehicle.current_mileage.toLocaleString()} mi</span>
+              }
               {vehicle.purchase_price && <span>Purchased for ${vehicle.purchase_price.toLocaleString()}</span>}
             </div>
+            {vehicle.current_mileage != null && latestOdometer != null && (
+              <p className="mt-1 text-xs text-gray-400">Tracking since {vehicle.current_mileage.toLocaleString()} mi</p>
+            )}
           </div>
           <div className="flex gap-3">
             <button onClick={openEdit} className="text-sm text-blue-500 hover:text-blue-700">Edit</button>

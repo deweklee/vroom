@@ -13,6 +13,7 @@ interface Vehicle {
   year: number;
   vin?: string;
   current_mileage?: number;
+  latest_odometer?: number;
 }
 
 export default function VehiclesPage() {
@@ -55,7 +56,9 @@ export default function VehiclesPage() {
               <p className="text-lg font-semibold text-gray-900">{v.year} {v.make} {v.model}</p>
               <div className="mt-1 flex gap-4 text-sm text-gray-500">
                 {v.vin && <span>VIN: {v.vin}</span>}
-                {v.current_mileage && <span>{v.current_mileage.toLocaleString()} mi</span>}
+                {(v.latest_odometer ?? v.current_mileage) != null && (
+                  <span>{(v.latest_odometer ?? v.current_mileage)!.toLocaleString()} mi</span>
+                )}
               </div>
             </Link>
           ))}

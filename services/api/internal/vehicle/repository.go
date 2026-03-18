@@ -47,12 +47,14 @@ func (r *pgxRepository) Create(ctx context.Context, in CreateVehicleInput) (*Veh
 
 func (r *pgxRepository) GetByID(ctx context.Context, id uuid.UUID) (*Vehicle, error) {
 	query := `
-		SELECT id, user_id, make, model, year, vin, purchase_price, purchase_date, current_mileage, created_at
-		FROM vehicles
-		WHERE id = $1
+		SELECT v.id, v.user_id, v.make, v.model, v.year, v.vin, v.purchase_price, v.purchase_date, v.current_mileage,
+		       (SELECT MAX(fe.odometer) FROM fuel_entries fe WHERE fe.vehicle_id = v.id) AS latest_odometer,
+		       v.created_at
+		FROM vehicles v
+		WHERE v.id = $1
 	`
 	row := r.pool.QueryRow(ctx, query, id)
-	return scanVehicle(row)
+	return scanVehicleWithOdometer(row)
 }
 
 func (r *pgxRepository) List(ctx context.Context, userID *uuid.UUID) ([]Vehicle, error) {
@@ -60,16 +62,20 @@ func (r *pgxRepository) List(ctx context.Context, userID *uuid.UUID) ([]Vehicle,
 	var err error
 	if userID != nil {
 		rows, err = r.pool.Query(ctx, `
-			SELECT id, user_id, make, model, year, vin, purchase_price, purchase_date, current_mileage, created_at
-			FROM vehicles
-			WHERE user_id = $1
-			ORDER BY created_at DESC
+			SELECT v.id, v.user_id, v.make, v.model, v.year, v.vin, v.purchase_price, v.purchase_date, v.current_mileage,
+			       (SELECT MAX(fe.odometer) FROM fuel_entries fe WHERE fe.vehicle_id = v.id) AS latest_odometer,
+			       v.created_at
+			FROM vehicles v
+			WHERE v.user_id = $1
+			ORDER BY v.created_at DESC
 		`, *userID)
 	} else {
 		rows, err = r.pool.Query(ctx, `
-			SELECT id, user_id, make, model, year, vin, purchase_price, purchase_date, current_mileage, created_at
-			FROM vehicles
-			ORDER BY created_at DESC
+			SELECT v.id, v.user_id, v.make, v.model, v.year, v.vin, v.purchase_price, v.purchase_date, v.current_mileage,
+			       (SELECT MAX(fe.odometer) FROM fuel_entries fe WHERE fe.vehicle_id = v.id) AS latest_odometer,
+			       v.created_at
+			FROM vehicles v
+			ORDER BY v.created_at DESC
 		`)
 	}
 	if err != nil {
@@ -79,7 +85,7 @@ func (r *pgxRepository) List(ctx context.Context, userID *uuid.UUID) ([]Vehicle,
 
 	var out []Vehicle
 	for rows.Next() {
-		v, err := scanVehicle(rows)
+		v, err := scanVehicleWithOdometer(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -168,6 +174,38 @@ func (r *pgxRepository) GetStats(ctx context.Context, id uuid.UUID) (*VehicleSta
 		return nil, err
 	}
 	return &s, nil
+}
+
+func scanVehicleWithOdometer(row pgx.Row) (*Vehicle, error) {
+	var (
+		id             uuid.UUID
+		userID         uuid.UUID
+		make           string
+		model          string
+		year           int
+		vin            *string
+		purchasePrice  *float64
+		purchaseDate   *time.Time
+		currentMileage *int
+		latestOdometer *int
+		createdAt      time.Time
+	)
+	if err := row.Scan(&id, &userID, &make, &model, &year, &vin, &purchasePrice, &purchaseDate, &currentMileage, &latestOdometer, &createdAt); err != nil {
+		return nil, err
+	}
+	return &Vehicle{
+		ID:             id,
+		UserID:         userID,
+		Make:           make,
+		Model:          model,
+		Year:           year,
+		VIN:            vin,
+		PurchasePrice:  purchasePrice,
+		PurchaseDate:   purchaseDate,
+		CurrentMileage: currentMileage,
+		LatestOdometer: latestOdometer,
+		CreatedAt:      createdAt,
+	}, nil
 }
 
 func scanVehicle(row pgx.Row) (*Vehicle, error) {
