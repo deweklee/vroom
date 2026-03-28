@@ -1,4 +1,4 @@
-import { getToken } from "./auth";
+import { getToken, clearToken } from "./auth";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
@@ -12,6 +12,12 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
       ...init?.headers,
     },
   });
+
+  if (res.status === 401) {
+    clearToken();
+    window.location.href = "/login";
+    throw new Error("Session expired. Please sign in again.");
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
