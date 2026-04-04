@@ -1,0 +1,3 @@
+ALTER TABLE users
+    ALTER COLUMN password_hash DROP NOT NULL,
+    ADD COLUMN IF NOT EXISTS google_id TEXT UNIQUE;

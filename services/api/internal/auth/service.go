@@ -13,6 +13,7 @@ var ErrEmailTaken = errors.New("email already registered")
 type Service interface {
 	Login(ctx context.Context, email, password string) (*User, error)
 	Register(ctx context.Context, email, password string) (*User, error)
+	LoginWithGoogle(ctx context.Context, googleID, email string) (*User, error)
 }
 
 type service struct {
@@ -48,5 +49,9 @@ func (s *service) Register(ctx context.Context, email, password string) (*User, 
 	}
 
 	return u, nil
+}
+
+func (s *service) LoginWithGoogle(ctx context.Context, googleID, email string) (*User, error) {
+	return s.repo.FindOrCreateByGoogle(ctx, googleID, email)
 }
 

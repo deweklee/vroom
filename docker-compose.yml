@@ -30,6 +30,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:-changeme}
       NATS_URL: nats://nats:4222
       PORT: "8080"
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URL: http://localhost:8080/auth/google/callback
     depends_on:
       postgres:
         condition: service_healthy
