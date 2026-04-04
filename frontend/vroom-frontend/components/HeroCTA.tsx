@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getToken, onAuthChange } from "@/lib/auth";
+import { getToken, onAuthChange, clearIfExpired } from "@/lib/auth";
 
 export default function HeroCTA() {
   const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
+    clearIfExpired();
     setLoggedIn(!!getToken());
     return onAuthChange(() => setLoggedIn(!!getToken()));
   }, []);

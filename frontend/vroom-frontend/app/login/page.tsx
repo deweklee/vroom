@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
@@ -8,13 +8,9 @@ import { setToken } from "@/lib/auth";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
-export default function LoginPage() {
+function OAuthHandler({ setError }: { setError: (e: string) => void }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -25,7 +21,17 @@ export default function LoginPage() {
     }
     const err = searchParams.get("error");
     if (err) setError("Google sign-in failed. Please try again.");
-  }, [searchParams, router]);
+  }, [searchParams, router, setError]);
+
+  return null;
+}
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +53,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 px-4 pt-12">
+      <Suspense>
+        <OAuthHandler setError={setError} />
+      </Suspense>
       <div className="mx-auto w-full max-w-sm">
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900">Sign in</h2>
