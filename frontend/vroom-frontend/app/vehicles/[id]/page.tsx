@@ -125,6 +125,22 @@ export default function VehicleDetailPage() {
     }
   }
 
+  async function handleExport() {
+    const token = getToken();
+    const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+    const res = await fetch(`${API}/vehicles/${id}/export`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${vehicle?.make}_${vehicle?.model}_${vehicle?.year}_export.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function deleteVehicle() {
     if (!confirm("Delete this vehicle? This cannot be undone.")) return;
     await apiFetch(`/vehicles/${id}`, { method: "DELETE" });
@@ -164,6 +180,7 @@ export default function VehicleDetailPage() {
           </div>
           <div className="flex gap-3">
             <button onClick={openEdit} className="text-sm text-blue-500 hover:text-blue-700">Edit</button>
+            <button onClick={handleExport} className="text-sm text-gray-500 hover:text-gray-900">Export CSV</button>
             <button onClick={deleteVehicle} className="text-sm text-red-500 hover:text-red-400">Delete</button>
           </div>
         </div>

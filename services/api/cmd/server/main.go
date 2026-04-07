@@ -9,6 +9,7 @@ import (
 	"vroom-api/internal/auth"
 	"vroom-api/internal/db"
 	"vroom-api/internal/events"
+	"vroom-api/internal/export"
 	"vroom-api/internal/fuel"
 	"vroom-api/internal/maintenance"
 	"vroom-api/internal/modifications"
@@ -46,6 +47,8 @@ func main() {
 	modsSvc := modifications.NewService(modsRepo, pub)
 	modsHandler := modifications.NewHandler(modsSvc)
 
+	exportHandler := export.NewHandler(vehicleSvc, fuelSvc, maintenanceSvc, modsSvc)
+
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -67,6 +70,7 @@ func main() {
 	fuelHandler.RegisterRoutes(r, auth.AuthMiddleware())
 	maintenanceHandler.RegisterRoutes(r, auth.AuthMiddleware())
 	modsHandler.RegisterRoutes(r, auth.AuthMiddleware())
+	exportHandler.RegisterRoutes(r, auth.AuthMiddleware())
 
 	if err := r.Run(":" + port); err != nil {
 		os.Exit(1)
