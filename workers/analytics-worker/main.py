@@ -18,22 +18,28 @@ async def main():
 
     pool = await asyncpg.create_pool(db_url)
     nc = await nats.connect(nats_url)
+    js = await nc.jetstream()
 
     async def on_fuel(msg):
         await handle_fuel_created(pool, msg)
+        await msg.ack()
 
     async def on_maintenance(msg):
         await handle_maintenance_created(pool, msg)
+        await msg.ack()
 
     async def on_modification(msg):
         await handle_modification_created(pool, msg)
+        await msg.ack()
 
-    await nc.subscribe("fuel.entry.created", cb=on_fuel)
-    await nc.subscribe("maintenance.record.created", cb=on_maintenance)
-    await nc.subscribe("modification.created", cb=on_modification)
+    # Durable push consumers — messages queue up on disk if the worker is down
+    # and are delivered when it reconnects.
+    await js.subscribe("fuel.entry.created", durable="analytics-fuel", cb=on_fuel)
+    await js.subscribe("maintenance.record.created", durable="analytics-maintenance", cb=on_maintenance)
+    await js.subscribe("modification.created", durable="analytics-modification", cb=on_modification)
 
-    print(f"[worker] connected to NATS at {nats_url}")
-    print("[worker] subscribed to: fuel.entry.created, maintenance.record.created, modification.created")
+    print(f"[worker] connected to NATS JetStream at {nats_url}")
+    print("[worker] subscribed (durable) to: fuel.entry.created, maintenance.record.created, modification.created")
 
     try:
         await asyncio.Event().wait()  # run forever

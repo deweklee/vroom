@@ -18,6 +18,7 @@ type Publisher interface {
 
 type natsPublisher struct {
 	conn *nats.Conn
+	js   nats.JetStreamContext
 }
 
 func NewPublisher() Publisher {
@@ -32,8 +33,27 @@ func NewPublisher() Publisher {
 		return &noopPublisher{}
 	}
 
-	log.Printf("[events] connected to NATS at %s", url)
-	return &natsPublisher{conn: conn}
+	js, err := conn.JetStream()
+	if err != nil {
+		log.Printf("[events] JetStream context failed: %v — publishing disabled", err)
+		conn.Close()
+		return &noopPublisher{}
+	}
+
+	// Ensure the VROOM stream exists. AddStream is idempotent — it returns
+	// the existing stream info if the stream is already configured correctly.
+	_, err = js.AddStream(&nats.StreamConfig{
+		Name:     "VROOM",
+		Subjects: []string{"vehicle.>", "fuel.>", "maintenance.>", "modification.>"},
+	})
+	if err != nil {
+		log.Printf("[events] stream setup failed: %v — publishing disabled", err)
+		conn.Close()
+		return &noopPublisher{}
+	}
+
+	log.Printf("[events] connected to NATS JetStream at %s", url)
+	return &natsPublisher{conn: conn, js: js}
 }
 
 func (p *natsPublisher) Publish(subject string, payload any) {
@@ -42,7 +62,7 @@ func (p *natsPublisher) Publish(subject string, payload any) {
 		log.Printf("[events] marshal error on subject %q: %v", subject, err)
 		return
 	}
-	if err := p.conn.Publish(subject, data); err != nil {
+	if _, err := p.js.Publish(subject, data); err != nil {
 		log.Printf("[events] publish error on subject %q: %v", subject, err)
 	}
 }
