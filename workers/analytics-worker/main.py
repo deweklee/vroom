@@ -18,7 +18,12 @@ async def main():
 
     pool = await asyncpg.create_pool(db_url)
     nc = await nats.connect(nats_url)
-    js = await nc.jetstream()
+    js = nc.jetstream()
+
+    await js.add_stream(
+        name="VROOM",
+        subjects=["vehicle.>", "fuel.>", "maintenance.>", "modification.>"],
+    )
 
     async def on_fuel(msg):
         await handle_fuel_created(pool, msg)
